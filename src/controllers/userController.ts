@@ -5,13 +5,25 @@ import { verifyID } from "../utils/verifyObjectID";
 import HttpCodes from "../utils/responses/httpCodes";
 import { comparePasswords, hashPassword } from "../utils/encyptPasswords";
 import { assignToken } from "../utils/jwt";
-import { validateUser } from "../utils/validation/userValidation";
+import {
+  validateLoginDetails,
+  validateUser,
+} from "../utils/validation/userValidation";
 
 const { OK, BADREQUEST, ACCEPTED, CREATED, INTERNALERROR } = HttpCodes;
 
 export const loginUser = async (req: Request, res: Response) => {
+  //
   const userPassword: string = req.body.password;
   const userEmail: string = req.body.email;
+  //
+  if (validateLoginDetails(userEmail, userPassword).error) {
+    return res.status(OK).send({
+      message: "Email or password is incorrect",
+      code: BADREQUEST,
+      success: false,
+    });
+  }
   try {
     const user = await Users.findOne({ email: userEmail });
     if (!user) {
@@ -34,13 +46,15 @@ export const loginUser = async (req: Request, res: Response) => {
         success: false,
       });
     }
-    const { password, _id, ...restUser } = (user as any)?._doc;
+    const { password, ...restUser } = (user as any)?._doc;
 
     const token = assignToken(restUser);
     res.header("token", token).status(200).send({
       message: "Logged in user",
       data: restUser,
       code: 200,
+      success: true,
+      token,
     });
   } catch (error) {
     res.status(INTERNALERROR).send({
@@ -144,9 +158,9 @@ export const getUser = async (req: Request, res: Response) => {
 };
 
 export const updateUser = async (req: Request, res: Response) => {
-  const userObj: IUser = req.body;
+  const newUserData: IUser = req.body;
   //Check if user details are in order
-  if (validateUser(userObj).error) {
+  if (validateUser(newUserData).error) {
     return res.status(OK).send({
       message: "The user details are invalid",
       code: BADREQUEST,
@@ -165,44 +179,41 @@ export const updateUser = async (req: Request, res: Response) => {
       });
     }
     //if not
-    const newEncryptedPassword = await hashPassword(userObj.password);
+    const newEncryptedPassword = await hashPassword(newUserData.password);
     //New password?
     const newPassword: boolean = await comparePasswords(
       registeredUser.password,
-      userObj.password
+      newUserData.password
     );
-    //Can't update email
-    const user = new Users({
-      name: userObj.name,
-      password: newPassword ? registeredUser : newEncryptedPassword,
+
+    await registeredUser.updateOne({
+      name: newUserData.name,
+      password: newPassword ? registeredUser.password : newEncryptedPassword,
     });
-
-    //Update the user
-    await user.updateOne();
-
     //If errors occur during the saving process
-    if (user.errors) {
+    if (registeredUser.errors) {
       return res.status(OK).send({
         code: BADREQUEST,
-        message: "Failed to register user",
+        message: "Failed to update user",
         success: false,
       });
     }
 
     //Assing jwt
-    const { password, ...restUser } = (user as any)?._doc;
+    const { password, ...restUser } = (registeredUser as any)?._doc;
     const token = assignToken(restUser);
 
-    res.header("token", token).status(CREATED).send({
-      message: "New user added",
+    res.header("token", token).status(OK).send({
+      message: "Updated user",
       data: restUser,
-      code: 201,
+      code: OK,
       success: true,
       token,
     });
   } catch (error) {
+    console.log(error);
     res.status(INTERNALERROR).send({
-      message: "Something went wrong during registration",
+      message: "Something went wrong during updating",
       code: INTERNALERROR,
       success: false,
     });

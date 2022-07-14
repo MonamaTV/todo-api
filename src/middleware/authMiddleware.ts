@@ -27,6 +27,7 @@ export const isUserAuthenticated = async (
       token,
       process.env.SECRET_PAYLOAD as string
     );
+    console.log(verifiedUser);
     //
     if (!verifiedUser) {
       return res.status(UNAUTHORISED).send({

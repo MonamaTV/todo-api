@@ -8,3 +8,10 @@ const joiUser = Joi.object<IUser>({
 });
 
 export const validateUser = (user: IUser) => joiUser.validate(user);
+
+export const validateLoginDetails = (email: string, password: string) => {
+  return Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().required().min(8),
+  }).validate({ email, password });
+};
