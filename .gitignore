@@ -1,0 +1,11 @@
+/.git
+.git
+# User
+/.vscode
+.vscode
+
+/node_modules
+/dist
+/build
+.env
+.env.*
