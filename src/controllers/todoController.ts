@@ -84,8 +84,55 @@ export const addNewTodo = async (req: Request, res: Response) => {
     });
   }
 };
-export const updateTodo = (req: Request, res: Response) => {
+export const updateTodo = async (req: Request, res: Response) => {
   //Todo: To be implemented
+  const newTodo: ITodo = req.body;
+  //IDs
+  const todoID: string = req.params.todoID;
+  const { _id } = req.user;
+  //If there is an error validating
+  if (validateTodo(newTodo).error) {
+    return res.status(BADREQUEST).send({
+      message: "The todo values are invalid to update",
+      code: BADREQUEST,
+      success: false,
+    });
+  }
+
+  try {
+    const updateTodo = await Todos.updateOne(
+      { _id: todoID, userID: _id },
+      {
+        $set: {
+          completed: newTodo.completed,
+          title: newTodo.title,
+          content: newTodo.content,
+          description: newTodo.description,
+        },
+      }
+    );
+
+    if (updateTodo.modifiedCount < 1) {
+      res.status(OK).send({
+        message: "Failed to make changes",
+        code: BADREQUEST,
+        success: false,
+      });
+    }
+
+    res.status(OK).send({
+      message: "Updated todo",
+      code: OK,
+      success: true,
+      data: updateTodo,
+    });
+  } catch (error) {
+    res.status(INTERNALERROR).send({
+      message: "Failed to update todo",
+      code: INTERNALERROR,
+      success: false,
+    });
+  }
 };
 export const getTodos = async (req: Request, res: Response) => {
   try {
