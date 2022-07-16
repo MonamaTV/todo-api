@@ -1,11 +1,12 @@
 {
-  "name": "index.ts",
+  "name": "todo-application",
   "version": "1.0.0",
   "description": "Express server",
   "main": "index.ts",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon dist/index.js\" "
+    "dev": "concurrently \"npx tsc --watch\" \"nodemon dist/index.js\" ",
+    "postinstall": "tsc"
   },
   "author": "",
   "license": "ISC",

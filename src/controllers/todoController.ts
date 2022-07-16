@@ -89,11 +89,21 @@ export const updateTodo = async (req: Request, res: Response) => {
   const newTodo: ITodo = req.body;
   //IDs
   const todoID: string = req.params.todoID;
+  //Used to match the said to be updated
   const { _id } = req.user;
   //If there is an error validating
   if (validateTodo(newTodo).error) {
     return res.status(BADREQUEST).send({
       message: "The todo values are invalid to update",
+      code: BADREQUEST,
+      success: false,
+    });
+  }
+
+  //Verify the todo ID
+  if (!verifyID(todoID)) {
+    return res.status(BADREQUEST).send({
+      message: "The Todo ID is not valid",
       code: BADREQUEST,
       success: false,
     });
@@ -111,7 +121,7 @@ export const updateTodo = async (req: Request, res: Response) => {
         },
       }
     );
-
+    //
     if (updateTodo.modifiedCount < 1) {
       res.status(OK).send({
         message: "Failed to make changes",
@@ -119,12 +129,11 @@ export const updateTodo = async (req: Request, res: Response) => {
         success: false,
       });
     }
-
+    //Reply
     res.status(OK).send({
       message: "Updated todo",
       code: OK,
       success: true,
-      data: updateTodo,
     });
   } catch (error) {
     res.status(INTERNALERROR).send({
@@ -149,7 +158,7 @@ export const getTodos = async (req: Request, res: Response) => {
     res.status(OK).send({
       message: "User todos",
       code: OK,
-      sucess: true,
+      success: true,
       data: todos,
     });
   } catch (error) {
