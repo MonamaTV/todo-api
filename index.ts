@@ -23,7 +23,10 @@ app.use(isUserAuthenticated);
 app.use("/todos", todoRoute);
 app.use("/users", userRoute);
 
-app.listen(8000, () => {
+//POST
+const PORT: any = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
   console.log("Server is running");
   try {
     connectDB(); //Connect the database
